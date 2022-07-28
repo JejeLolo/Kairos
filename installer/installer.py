@@ -13,7 +13,8 @@ import ctypes
 
 DEFAULT_PATH = "C:/Kairos/"
 
-entreprise = sys.argv[1] if len(sys.argv) > 1 else None
+# entreprise = sys.argv[1] if len(sys.argv) > 1 else None
+entreprise = "jejelolo"
 
 #init VAULT SERVER
 def init_server(token):
@@ -21,7 +22,7 @@ def init_server(token):
     return client.is_authenticated(), client
 
 def read_secret(client):
-    secret = client.kv.read_secret(mount_point='kairos', path='entreprise/{}'.format(os.environ["COMPUTERNAME"]))
+    secret = client.kv.read_secret(mount_point='kairos', path=f'{entreprise}/{os.environ["COMPUTERNAME"]}')
     return secret
 
 def get_mac():
@@ -32,7 +33,7 @@ def get_mac():
 
 def insert_secret(client):
     passwd = {str(os.environ["COMPUTERNAME"]): str(passwd)}
-    client.secrets.kv.v2.create_or_update_secret(mount_point='kairos', path='entreprise/{}'.format(os.environ["COMPUTERNAME"]), secret=passwd)
+    client.secrets.kv.v2.create_or_update_secret(mount_point='kairos', path=f'{entreprise}/{os.environ["COMPUTERNAME"]}', secret=passwd)
 
 def create_user(client):
     """Create Admin User with secrets password
@@ -72,7 +73,7 @@ def download_files():
     directory = DEFAULT_PATH
     try:
         os.mkdir(directory)
-        path = 'https://github.com/JeremyDEGANO/Dynoland/archive/refs/heads/master.zip'
+        path = 'https://github.com/JejeLolo/Kairos/archive/refs/heads/main.zip'
         filename = path.split('/')[-1]
         files = requests.get(path, stream=True)
         with open( directory + filename, "wb") as f:
