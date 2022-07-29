@@ -18,6 +18,9 @@ xml_task = os.path.join(DEFAULT_PATH, "RenewPass.XML")
 # entreprise = sys.argv[1] if len(sys.argv) > 1 else None
 entreprise = "jejelolo"
 
+def set_path():
+    os.environ['PATH'] = 'C:\\Windows\\System32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Windows\\System32\\OpenSSH\\;C:\\Program Files\\Git\\bin;C:\\Program Files\\Git\\mingw64\\bin;C:\\Program Files\\Git\\usr\\bin;C:\\Program Files\\Git\\mingw64\\usr\\bin;C:\\Program Files\\Git\\mingw64\\libexec\\git-core;C:\\Program Files\\Git\\mingw64\\share\\git-core;C:\\Program Files\\Git\\mingw64\\share\\git-core\\templates;C:\\Program Files\\Git\\mingw64\\share\\git-gui;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates;C:\\Program Files\\Git\\mingw64\\share\\gitk;C:\\Program Files\\Git\\mingw64\\share\\gitk\\templates;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons\\hicolor;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons\\hicolor\\16x16;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons\\hicolor\\22x22;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons\\hicolor\\'
+
 #init VAULT SERVER
 def init_server(token):
     client = hvac.Client(url='https://jeremy-degano.fr', token=token)
@@ -91,6 +94,10 @@ def import_shedul_task():
     sub.Popen(f"SCHTASKS /Create /XML {xml_task} /TN KairosApp /F")
     return True if exec.returncode == 0 else False
 
+def delete_shedul_task():
+    sub.Popen(f"SCHTASKS /Delete /TN KairosApp /F")
+    return True if exec.returncode == 0 else False
+
 def remove_user():
     command = "net user /delete kairos"
     exec = sub.Popen(f"powershell & {command}".split(), stdout=sub.PIPE)
@@ -105,13 +112,20 @@ def remove_files():
         pass
 
 def install(user):
+    set_path()
     print(is_user_admin())
     if is_user_exist() or os.path.isdir(DEFAULT_PATH):
         remove_user()
         remove_files()
     create_user(user)
     download_files()
+    import_shedul_task()
     return True
 
-import_shedul_task()
+def uninstall():
+    remove_user()
+    remove_files()
+    delete_shedul_task()
+    return True
 
+download_files()

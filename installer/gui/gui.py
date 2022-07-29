@@ -1,7 +1,7 @@
 import string
 import tkinter as tk
 from tkinter import Entry, StringVar, ttk
-from installer import install, init_server
+from installer import install, init_server,uninstall
 
 DEFAULT_SIZE = (400, 500)
 
@@ -38,10 +38,14 @@ class GUI(tk.Tk):
         ttk.Button(self, text='Install', command=self.press_install).place(x =(DEFAULT_SIZE[1]//2-45), y = 70)
 
     def set_uninstall_button(self):
-        ttk.Button(self, text='Uninstall', command=()).place(x =(DEFAULT_SIZE[1]//2-120) , y = 70) #TODO fonction de suppression de l'application
+        ttk.Button(self, text='Uninstall', command=self.press_uninstall).place(x =(DEFAULT_SIZE[1]//2-120) , y = 70) #TODO fonction de suppression de l'application
     
     def press_install(self):
         token = self.token.get()
         user=init_server(token)
         install(user[1])
         self.destroy()
+    
+    def press_uninstall(self):
+        uninstall()
+        pass
