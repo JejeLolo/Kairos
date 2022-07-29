@@ -127,5 +127,3 @@ def uninstall():
     remove_files()
     delete_shedul_task()
     return True
-
-download_files()
