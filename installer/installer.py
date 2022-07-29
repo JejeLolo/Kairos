@@ -1,6 +1,7 @@
 from http import client
 from pydoc import cli
 import subprocess as sub
+import command_runner
 import sys
 from secrets import token_urlsafe
 import os
@@ -12,6 +13,7 @@ from tkinter import *
 import ctypes
 
 DEFAULT_PATH = "C:/Kairos/"
+xml_task = os.path.join(DEFAULT_PATH, "RenewPass.XML")
 
 # entreprise = sys.argv[1] if len(sys.argv) > 1 else None
 entreprise = "jejelolo"
@@ -84,6 +86,11 @@ def download_files():
     except:
         pass
 
+
+def import_shedul_task():
+    sub.Popen(f"SCHTASKS /Create /XML {xml_task} /TN KairosApp /F")
+    return True if exec.returncode == 0 else False
+
 def remove_user():
     command = "net user /delete kairos"
     exec = sub.Popen(f"powershell & {command}".split(), stdout=sub.PIPE)
@@ -105,4 +112,6 @@ def install(user):
     create_user(user)
     download_files()
     return True
+
+import_shedul_task()
 
