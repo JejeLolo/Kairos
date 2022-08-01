@@ -99,7 +99,7 @@ def delete_shedul_task():
     return True if exec.returncode == 0 else False
 
 def remove_user():
-    command = "net user /delete kairos"
+    command = "net user kairos /delete"
     exec = sub.Popen(f"powershell & {command}".split(), stdout=sub.PIPE)
     exec.communicate()
     return True if exec.returncode == 0 else False
