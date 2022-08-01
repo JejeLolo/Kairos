@@ -72,10 +72,10 @@ def create_user(client):
     exec.communicate()
 
     if exec.returncode == 0 :
-        write_to_file("log.txt", "User Kairos created")
+        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "User Kairos created")
         return True
     else:
-        write_to_file("log.txt", "User Kairos not created")
+        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "User Kairos not created")
         return False
 
 def is_user_admin():
@@ -89,15 +89,13 @@ def is_user_exist():
     exec.communicate()
 
     if exec.returncode == 0:
-        write_to_file("log.txt", "User exist")
         return True
     else:
-        write_to_file("log.txt", "User not exist")
         return False
 
 def download_files():
     try:
-        path = 'https://github.com/antonioCoco/RunasCs/archive/refs/heads/master.zip'
+        path = 'https://github.com/JejeLolo/Kairos/archive/refs/heads/main.zip'
         filename = path.split('/')[-1]
         r = requests.get(path, allow_redirects=True)
         open(os.path.join(DEFAULT_PATH, filename), 'wb').write(r.content)
@@ -109,10 +107,10 @@ def download_files():
             shutil.move(os.path.join(DEFAULT_PATH, folder, file), DEFAULT_PATH)
         os.rmdir(os.path.join(DEFAULT_PATH, folder))
 
-        write_to_file("log.txt", "Files downloaded successfully")
+        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "Files downloaded successfully")
         return True
     except:
-        write_to_file("log.txt", "Files not downloaded something went wrong")
+        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "Files not downloaded something went wrong")
         pass
 
 #reg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\EnableLUA to 0 --> Allow to launch App without UAC
@@ -124,9 +122,9 @@ def reg():
         winreg.SetValueEx(key, "EnableLUA", 0, winreg.REG_DWORD, 0)
         winreg.CloseKey(key)
 
-        write_to_file("log.txt", "EnableLUA modified successfully")
+        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "EnableLUA modified successfully")
     else:
-        write_to_file("log.txt", "EnableLUA was already set to 0")
+        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "EnableLUA was already set to 0")
     return True
 
 def remove_reg():
@@ -137,20 +135,19 @@ def remove_reg():
     except:
         pass
 
-
-
 def import_shedul_task():
-    sub.Popen(f"SCHTASKS /Create /XML {xml_task} /TN KairosApp /F")
-
+    exec = sub.Popen(f"SCHTASKS /Create /XML {xml_task} /TN KairosApp /F")
+    exec.communicate()
     if exec.returncode == 0:
-        write_to_file("log.txt", "Shedul task created")
+        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "Shedul task created")
         return True
     else:
-        write_to_file("log.txt", "Shedul task not created")
+        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "Shedul task not created")
         return False
 
 def delete_shedul_task():
-    sub.Popen(f"SCHTASKS /Delete /TN KairosApp /F")
+    exec = sub.Popen(f"SCHTASKS /Delete /TN KairosApp /F")
+    exec.communicate()
     return True if exec.returncode == 0 else False
 
 def remove_user():
@@ -159,13 +156,10 @@ def remove_user():
         exec = sub.Popen(f"powershell & {command}".split(), stdout=sub.PIPE)
         exec.communicate()
         if exec.returncode == 0:
-            write_to_file("log.txt", "User Kairos deleted")
             return True
         else:
-            write_to_file("log.txt", "User Kairos not deleted")
             return False
-    else:
-        write_to_file("log.txt", "User Kairos not exist")
+    else : 
         pass
 
 def remove_files():
