@@ -177,6 +177,7 @@ def remove_files():
 
 def install(user):
     if is_user_exist() or os.path.isdir(DEFAULT_PATH):
+        delete_shedul_task()
         remove_user()
         remove_files()
     set_path()
