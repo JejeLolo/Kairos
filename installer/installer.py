@@ -1,12 +1,11 @@
-from http import client
-from logging.handlers import DEFAULT_TCP_LOGGING_PORT
 from pydoc import cli
 import shutil
 import subprocess as sub
 import winreg
 import datetime
+import windows_tools
 import command_runner
-import sys
+import ofunctions.platform
 from secrets import token_urlsafe
 import os
 import uuid
@@ -17,10 +16,90 @@ from tkinter import *
 import ctypes
 
 DEFAULT_PATH = "C:/Kairos/"
+APP_NAME = "kairos"
 xml_task = os.path.join(DEFAULT_PATH, "RenewPass.XML")
 
 # entreprise = sys.argv[1] if len(sys.argv) > 1 else None
 entreprise = "jejelolo"
+
+def set_acls(acl_type, path):
+    """
+    :param type:
+    :param path:
+    :return:
+    Well known SIDS are
+    S-1-1-0 : Everyone
+    S-1-5-32-544 : Local administrator
+    In order to work, we first need to set rights on all folders and files, then
+    set again rights with (OI)(CI) which applies only on folders, in order for new files to have correct rights
+    so /grant sid:F works for all folders / files
+    second run /grant sid:(OI)(CI):F will enable inheritance on folders
+    restricted = System has full rights, admins have full right (core app), everyone has no rights at all (core app)
+    read       = System has full rights, everyone has read right (logs)
+    """
+
+    # not to use only system ACLs anymore
+    # TODO: Remove npexec since it looks like a ransomware to MalwareBytes and probably others
+    npexec = os.path.join(DEFAULT_PATH, 'NPExec.exe')
+
+    if acl_type == 'restricted':
+        commands = [
+            # '"%s" -accepteula -s takeown /F "%s" %s' % (npexec, path, takeown_opt),
+            '"%s" -accepteula -s icacls "%s" /inheritance:r /grant:R System:F ' \
+            '/grant *S-1-5-32-544:F /remove:gd *S-1-1-0 /T /C /Q' % (npexec, path),
+            '"%s" -accepteula -s icacls "%s" /inheritance:r /grant:R System:(OI)(CI)F ' \
+            '/grant *S-1-5-32-544:(OI)(CI)F /T /C /Q' % (npexec, path)
+        ]
+    elif acl_type == 'read':
+        commands = [
+            # '"%s" -accepteula -s takeown /F "%s" %s' % (npexec, path, takeown_opt),
+            '"%s" -accepteula -s icacls "%s" /inheritance:r /grant:R System:F ' \
+            '/grant *S-1-5-32-544:F /grant *S-1-1-0:RX /T /C /Q' % (npexec, path),
+            '"%s" -accepteula -s icacls "%s" /inheritance:r /grant:R System:(OI)(CI)F ' \
+            '/grant *S-1-5-32-544:(OI)(CI)F /grant *S-1-1-0:(OI)(CI)RX /T /C /Q' % (npexec, path)
+        ]
+    elif acl_type == 'traverse':
+        commands = [
+            # '"%s" -accepteula -s takeown /F "%s" %s' % (npexec, path, takeown_opt),
+            '"%s" -accepteula -s icacls "%s" /grant *S-1-1-0:RX /C /Q' % (npexec, path),
+        ]
+    elif acl_type == 'traverse-inherit':
+        commands = [
+            # '"%s" -accepteula -s takeown /F "%s" %s' % (npexec, path, takeown_opt),
+            '"%s" -accepteula -s icacls "%s" /grant *S-1-1-0:RX /T /C /Q' % (npexec, path),
+            '"%s" -accepteula -s icacls "%s" /grant *S-1-1-0:(OI)(CI)RX /T /C /Q' % (npexec, path)
+        ]
+    else:
+        commands = []
+
+    # First transfer file ownership of every directory and file
+    admins_sid = windows_tools.file_utils.get_pysid('S-1-5-32-544')
+    try:
+        windows_tools.file_utils.take_ownership_recursive(path, owner=admins_sid)
+    except OSError:
+        pass
+
+    for command in commands:
+        result, output = command_runner.command_runner(command, timeout=1800, windows_no_window=True, encoding='cp437')
+        if result != 0:
+            try:
+                temp_log_file = os.path.join(os.environ.get('TMP', False), APP_NAME + '.log')
+                tmp_logger = ofunctions.logger_utils.logger_get_logger(temp_log_file, debug= False)
+                tmp_logger.critical('Cannot prepare ACLs. %s' % command)
+                tmp_logger.critical(output)
+            except:
+                pass
+            return result
+    return 0
+
+def fix_acl():
+    res = set_acls('restricted', DEFAULT_PATH)
+    if res != 0:
+        pass
+    res = set_acls('traverse', DEFAULT_PATH)
+    if res != 0:
+        pass
+
 
 def write_to_file(file_name, text):
     with open(file_name, 'a') as f:
