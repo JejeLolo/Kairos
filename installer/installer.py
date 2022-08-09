@@ -4,8 +4,10 @@ import subprocess as sub
 import winreg
 import datetime
 import windows_tools
+import windows_tools.file_utils
 import command_runner
 import ofunctions.platform
+from ofunctions import file_utils
 from secrets import token_urlsafe
 import os
 import uuid
@@ -16,7 +18,12 @@ from tkinter import *
 import ctypes
 
 DEFAULT_PATH = "C:/Kairos/"
+ROOT_PATH = os.path.join(os.environ.get('SYSTEMDRIVE', '/'), os.sep, 'Kairos')
+LOG_DIRECTORY = os.path.join(ROOT_PATH, 'logs')
+CACERT_FOLDER = os.path.join(DEFAULT_PATH, 'CaCerts')
 APP_NAME = "kairos"
+APP_VERSION = "0.0.1"
+
 xml_task = os.path.join(DEFAULT_PATH, "RenewPass.XML")
 
 # entreprise = sys.argv[1] if len(sys.argv) > 1 else None
@@ -93,10 +100,18 @@ def set_acls(acl_type, path):
     return 0
 
 def fix_acl():
-    res = set_acls('restricted', DEFAULT_PATH)
+    res = set_acls('restricted', ROOT_PATH)
     if res != 0:
         pass
-    res = set_acls('traverse', DEFAULT_PATH)
+    res = set_acls('traverse', ROOT_PATH)
+    if res != 0:
+        pass
+    res = set_acls('read', os.path.join(ROOT_PATH, 'logs.txt'))
+    if res != 0:
+        pass
+    #hide cacerts
+    file_utils.make_path(CACERT_FOLDER)
+    res = set_acls('restricted', CACERT_FOLDER)
     if res != 0:
         pass
 
@@ -151,10 +166,10 @@ def create_user(client):
     exec.communicate()
 
     if exec.returncode == 0 :
-        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "User Kairos created")
+        write_to_file(os.path.join(DEFAULT_PATH,"logs.txt"), "User Kairos created")
         return True
     else:
-        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "User Kairos not created")
+        write_to_file(os.path.join(DEFAULT_PATH,"logs.txt"), "User Kairos not created")
         return False
 
 def is_user_admin():
@@ -186,10 +201,10 @@ def download_files():
             shutil.move(os.path.join(DEFAULT_PATH, folder, file), DEFAULT_PATH)
         os.rmdir(os.path.join(DEFAULT_PATH, folder))
 
-        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "Files downloaded successfully")
+        write_to_file(os.path.join(DEFAULT_PATH,"logs.txt"), "Files downloaded successfully")
         return True
     except:
-        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "Files not downloaded something went wrong")
+        write_to_file(os.path.join(DEFAULT_PATH,"logs.txt"), "Files not downloaded something went wrong")
         pass
 
 #reg HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\EnableLUA to 0 --> Allow to launch App without UAC
@@ -201,9 +216,9 @@ def reg():
         winreg.SetValueEx(key, "EnableLUA", 0, winreg.REG_DWORD, 0)
         winreg.CloseKey(key)
 
-        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "EnableLUA modified successfully")
+        write_to_file(os.path.join(DEFAULT_PATH,"logs.txt"), "EnableLUA modified successfully")
     else:
-        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "EnableLUA was already set to 0")
+        write_to_file(os.path.join(DEFAULT_PATH,"logs.txt"), "EnableLUA was already set to 0")
     return True
 
 def remove_reg():
@@ -218,10 +233,10 @@ def import_shedul_task():
     exec = sub.Popen(f"SCHTASKS /Create /XML {xml_task} /TN KairosApp /F")
     exec.communicate()
     if exec.returncode == 0:
-        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "Shedul task created")
+        write_to_file(os.path.join(DEFAULT_PATH,"logs.txt"), "Shedul task created")
         return True
     else:
-        write_to_file(os.path.join(DEFAULT_PATH,"log.txt"), "Shedul task not created")
+        write_to_file(os.path.join(DEFAULT_PATH,"logs.txt"), "Shedul task not created")
         return False
 
 def delete_shedul_task():
@@ -258,6 +273,7 @@ def install(user):
     download_files()
     import_shedul_task()
     reg()
+    fix_acl()
     return True
 
 def uninstall():
@@ -266,3 +282,4 @@ def uninstall():
     delete_shedul_task()
     remove_reg()
     return True
+
