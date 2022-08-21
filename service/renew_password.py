@@ -8,11 +8,18 @@ from secrets import token_urlsafe
 
 #define vault server
 vault_server = 'jeremy-degano.fr'
+DEFAULT_PATH = "C:/Kairos/"
+SERVICE_FOLDER = os.path.join(DEFAULT_PATH, 'Service')
 #set path for ping and net user
 def set_path():
     os.environ['PATH'] = 'C:\\Windows\\System32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Windows\\System32\\OpenSSH\\;C:\\Program Files\\Git\\bin;C:\\Program Files\\Git\\mingw64\\bin;C:\\Program Files\\Git\\usr\\bin;C:\\Program Files\\Git\\mingw64\\usr\\bin;C:\\Program Files\\Git\\mingw64\\libexec\\git-core;C:\\Program Files\\Git\\mingw64\\share\\git-core;C:\\Program Files\\Git\\mingw64\\share\\git-core\\templates;C:\\Program Files\\Git\\mingw64\\share\\git-gui;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates;C:\\Program Files\\Git\\mingw64\\share\\gitk;C:\\Program Files\\Git\\mingw64\\share\\gitk\\templates;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons\\hicolor;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons\\hicolor\\16x16;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons\\hicolor\\22x22;C:\\Program Files\\Git\\mingw64\\share\\git-gui\\templates\\common\\images\\icons\\hicolor\\'
 
+def read_token():
+    with open(os.path.join(SERVICE_FOLDER,'token.txt'), 'r') as f:
+        return f.read()
+
 def init_server(token):
+    #authenticate with tls certificate
     client = hvac.Client(url='https://jeremy-degano.fr', token=token)
     return client.is_authenticated(), client
 
@@ -54,7 +61,7 @@ if __name__ == '__main__':
                 pass
             else:
                 #insert password in vault
-                client = init_server(os.environ["VAULT_TOKEN"])
+                client = init_server(read_token())
                 insert_secret(client[1], password)
         
     except Exception as e:

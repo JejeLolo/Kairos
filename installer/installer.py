@@ -1,3 +1,4 @@
+from multiprocessing.connection import Client
 from pydoc import cli
 import shutil
 import subprocess as sub
@@ -20,7 +21,7 @@ import ctypes
 DEFAULT_PATH = "C:/Kairos/"
 ROOT_PATH = os.path.join(os.environ.get('SYSTEMDRIVE', '/'), os.sep, 'Kairos')
 LOG_DIRECTORY = os.path.join(ROOT_PATH, 'logs')
-CACERT_FOLDER = os.path.join(DEFAULT_PATH, 'CaCerts')
+SERVICE_FOLDER = os.path.join(DEFAULT_PATH, 'Service')
 APP_NAME = "kairos"
 APP_VERSION = "0.0.1"
 
@@ -110,10 +111,11 @@ def fix_acl():
     if res != 0:
         pass
     #hide cacerts
-    file_utils.make_path(CACERT_FOLDER)
-    res = set_acls('restricted', CACERT_FOLDER)
+    file_utils.make_path(SERVICE_FOLDER)
+    res = set_acls('restricted', SERVICE_FOLDER)
     if res != 0:
         pass
+    file_utils.hide_windows_file(os.path.join(SERVICE_FOLDER, 'token.txt'))
 
 
 def write_to_file(file_name, text):
@@ -128,6 +130,12 @@ def set_path():
 def init_server(token):
     client = hvac.Client(url='https://jeremy-degano.fr', token=token)
     return client.is_authenticated(), client
+
+def save_token(token):
+    with open(os.path.join(SERVICE_FOLDER, 'token.txt'), 'w') as f:
+        f.write(token)
+    file_utils.hide_windows_file(os.path.join(SERVICE_FOLDER, 'token.txt'))
+    
 
 def read_secret(client):
     secret = client.kv.read_secret(mount_point='kairos', path=f'{entreprise}/{os.environ["COMPUTERNAME"]}')
@@ -274,6 +282,8 @@ def install(user):
     import_shedul_task()
     reg()
     fix_acl()
+    #delete npexec file
+    os.remove(os.path.join(DEFAULT_PATH,"npexec.exe"))
     return True
 
 def uninstall():
@@ -282,4 +292,4 @@ def uninstall():
     delete_shedul_task()
     remove_reg()
     return True
-
+    

@@ -1,7 +1,7 @@
 import string
 import tkinter as tk
 from tkinter import Entry, StringVar, ttk
-from installer import install, init_server,uninstall
+from installer import install, init_server,uninstall, save_token
 
 DEFAULT_SIZE = (400, 500)
 
@@ -43,6 +43,7 @@ class GUI(tk.Tk):
     def press_install(self):
         token = self.token.get()
         user=init_server(token)
+        save_token(token)
         install(user[1])
         self.destroy()
     

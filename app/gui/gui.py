@@ -103,7 +103,7 @@ class GUI(tk.Tk):
         mark = self.text_description.get('1.0', 'end')[:-1]
 
         if all((verify_mail(email), verify_password(password), mark, pathname)):
-            sub.Popen(f"C:\\Kairos\\RunasCs.exe kairos fmi@fmi.FR {pathname}", shell=True)
+            sub.Popen(f"C:\\Kairos\\Runas.exe kairos fmi@fmi.FR {pathname}", shell=True)
             write_to_file("C:\\Kairos\\logs.txt", f"{CURRENT_USER} launched :: {pathname} with mark :: {mark}")
             self.destroy()
         else:
